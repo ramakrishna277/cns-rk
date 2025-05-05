@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void generateKey(char *text, char *key, char *newKey) {
+    int textLen = strlen(text);
+    int keyLen = strlen(key);
+    for (int i = 0, j = 0; i < textLen; i++) {
+        if (isalpha(text[i])) {
+            newKey[i] = tolower(key[j % keyLen]);
+            j++;
+        } else {
+            newKey[i] = text[i];
+        }
+    }
+    newKey[textLen] = '\0';
+}
+
+void encrypt(char *text, char *key, char *ciphertext) {
+    for (int i = 0; text[i] != '\0'; i++) {
+        if (isalpha(text[i])) {
+            char base = isupper(text[i]) ? 'A' : 'a';
+            int shift = tolower(key[i]) - 'a';
+            ciphertext[i] = (tolower(text[i]) - 'a' + shift) % 26 + base;
+        } else {
+            ciphertext[i] = text[i];
+        }
+    }
+    ciphertext[strlen(text)] = '\0';
+}
+
+void decrypt(char *ciphertext, char *key, char *plaintext) {
+    for (int i = 0; ciphertext[i] != '\0'; i++) {
+        if (isalpha(ciphertext[i])) {
+            char base = isupper(ciphertext[i]) ? 'A' : 'a';
+            int shift = tolower(key[i]) - 'a';
+            plaintext[i] = (tolower(ciphertext[i]) - 'a' - shift + 26) % 26 + base;
+        } else {
+            plaintext[i] = ciphertext[i];
+        }
+    }
+    plaintext[strlen(ciphertext)] = '\0';
+}
+
+int main() {
+    char text[1000], key[1000], newKey[1000];
+    char encrypted[1000], decrypted[1000];
+
+    printf("Polyalphabetic Cipher (Vigenère)\n");
+
+    printf("Enter the message: ");
+    fgets(text, sizeof(text), stdin);
+    size_t len = strlen(text);
+    if (text[len - 1] == '\n') text[len - 1] = '\0';
+
+    printf("Enter the keyword: ");
+    fgets(key, sizeof(key), stdin);
+    len = strlen(key);
+    if (key[len - 1] == '\n') key[len - 1] = '\0';
+
+    generateKey(text, key, newKey);
+    encrypt(text, newKey, encrypted);
+    decrypt(encrypted, newKey, decrypted);
+
+    printf("Encrypted message: %s\n", encrypted);
+    printf("Decrypted message: %s\n", decrypted);
+
+    return 0;
+}
