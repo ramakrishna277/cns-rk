@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void encrypt(char *plaintext, char *cipher_key, char *encrypted) {
+    for (int i = 0; plaintext[i] != '\0'; i++) {
+        char ch = plaintext[i];
+        if (isalpha(ch)) {
+            int index = tolower(ch) - 'a';
+            char enc = cipher_key[index];
+            encrypted[i] = isupper(ch) ? toupper(enc) : enc;
+        } else {
+            encrypted[i] = ch;
+        }
+    }
+    encrypted[strlen(plaintext)] = '\0';
+}
+
+void decrypt(char *ciphertext, char *cipher_key, char *decrypted) {
+    char reverse_key[26];
+    for (int i = 0; i < 26; i++) {
+        reverse_key[cipher_key[i] - 'a'] = 'a' + i;
+    }
+
+    for (int i = 0; ciphertext[i] != '\0'; i++) {
+        char ch = ciphertext[i];
+        if (isalpha(ch)) {
+            char lookup = tolower(ch);
+            char dec = reverse_key[lookup - 'a'];
+            decrypted[i] = isupper(ch) ? toupper(dec) : dec;
+        } else {
+            decrypted[i] = ch;
+        }
+    }
+    decrypted[strlen(ciphertext)] = '\0';
+}
+
+int main() {
+    char plaintext[1000], encrypted[1000], decrypted[1000];
+
+    char cipher_key[] = "QWERTYUIOPASDFGHJKLZXCVBNM";
+    for (int i = 0; i < 26; i++) cipher_key[i] = tolower(cipher_key[i]);
+
+    printf("Monoalphabetic Cipher (Encrypt and Decrypt)\n");
+    printf("Enter the message: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+
+    size_t len = strlen(plaintext);
+    if (plaintext[len - 1] == '\n') {
+        plaintext[len - 1] = '\0';
+    }
+
+    encrypt(plaintext, cipher_key, encrypted);
+    decrypt(encrypted, cipher_key, decrypted);
+
+    printf("Encrypted message: %s\n", encrypted);
+    printf("Decrypted message: %s\n", decrypted);
+
+    return 0;
+}
