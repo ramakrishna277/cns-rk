@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void encrypt(char *text, int key, char *output) {
+    for (int i = 0; text[i] != '\0'; ++i) {
+        char ch = text[i];
+        if (isalpha(ch)) {
+            char base = isupper(ch) ? 'A' : 'a';
+            output[i] = (ch - base + key) % 26 + base;
+        } else {
+            output[i] = ch;
+        }
+    }
+    output[strlen(text)] = '\0';
+}
+
+void decrypt(char *text, int key, char *output) {
+    encrypt(text, 26 - (key % 26), output);
+}
+
+int main() {
+    char text[1000];
+    char encrypted[1000], decrypted[1000];
+    int key;
+
+    printf("Caesar Cipher Program (Encrypt and Decrypt Together)\n");
+
+    printf("Enter the message: ");
+    fgets(text, sizeof(text), stdin);
+
+    size_t len = strlen(text);
+    if (text[len - 1] == '\n') {
+        text[len - 1] = '\0';
+    }
+
+    printf("Enter the key (number of positions to shift): ");
+    scanf("%d", &key);
+
+    encrypt(text, key, encrypted);
+    decrypt(encrypted, key, decrypted);
+
+    printf("Encrypted message: %s\n", encrypted);
+    printf("Decrypted back:    %s\n", decrypted);
+
+    return 0;
+}
