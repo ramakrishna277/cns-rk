@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int mod26(int x) {
+    x = x % 26;
+    return x < 0 ? x + 26 : x;
+}
+
+int determinant(int key[2][2]) {
+    return mod26(key[0][0]*key[1][1] - key[0][1]*key[1][0]);
+}
+
+int modInverse(int a) {
+    for (int i = 1; i < 26; i++)
+        if ((a * i) % 26 == 1)
+            return i;
+    return -1;
+}
+
+void inverseKey(int key[2][2], int invKey[2][2]) {
+    int det = determinant(key);
+    int invDet = modInverse(det);
+
+    invKey[0][0] = mod26( key[1][1] * invDet);
+    invKey[0][1] = mod26(-key[0][1] * invDet);
+    invKey[1][0] = mod26(-key[1][0] * invDet);
+    invKey[1][1] = mod26( key[0][0] * invDet);
+}
+
+void multiply(int key[2][2], int in[2], int out[2]) {
+    out[0] = mod26(key[0][0]*in[0] + key[0][1]*in[1]);
+    out[1] = mod26(key[1][0]*in[0] + key[1][1]*in[1]);
+}
+
+void encryptText(char *text, int key[2][2], char *result) {
+    int len = strlen(text);
+    if (len % 2 != 0) {
+        text[len++] = 'X';
+        text[len] = '\0';
+    }
+
+    for (int i = 0; i < len; i += 2) {
+        int in[2], out[2];
+        in[0] = toupper(text[i]) - 'A';
+        in[1] = toupper(text[i+1]) - 'A';
+        multiply(key, in, out);
+        result[i] = out[0] + 'A';
+        result[i+1] = out[1] + 'A';
+    }
+    result[len] = '\0';
+}
+
+void decryptText(char *cipher, int key[2][2], char *result) {
+    int len = strlen(cipher);
+    int invKey[2][2];
+    inverseKey(key, invKey);
+
+    for (int i = 0; i < len; i += 2) {
+        int in[2], out[2];
+        in[0] = cipher[i] - 'A';
+        in[1] = cipher[i+1] - 'A';
+        multiply(invKey, in, out);
+        result[i] = out[0] + 'A';
+        result[i+1] = out[1] + 'A';
+    }
+    result[len] = '\0';
+}
+
+int main() {
+    int key[2][2];
+    char text[100], encrypted[100], decrypted[100];
+
+    printf("Enter 2x2 key matrix (4 integers mod 26):\n");
+    scanf("%d %d %d %d", &key[0][0], &key[0][1], &key[1][0], &key[1][1]);
+    getchar();
+
+    if (modInverse(determinant(key)) == -1) {
+        printf("Key matrix is not invertible mod 26.\n");
+        return 1;
+    }
+
+    printf("Enter text (A–Z only): ");
+    fgets(text, sizeof(text), stdin);
+    text[strcspn(text, "\n")] = '\0';
+
+    encryptText(text, key, encrypted);
+    printf("Encrypted: %s\n", encrypted);
+
+    decryptText(encrypted, key, decrypted);
+    printf("Decrypted: %s\n", decrypted);
+
+    return 0;
+}
