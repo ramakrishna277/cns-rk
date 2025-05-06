@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <stdint.h>
+
+uint32_t feistel(uint32_t half_block, uint32_t subkey) {
+    return half_block ^ subkey;
+}
+
+uint64_t simple_des_encrypt(uint64_t plaintext, uint32_t key) {
+    uint32_t left = (plaintext >> 32) & 0xFFFFFFFF;
+    uint32_t right = plaintext & 0xFFFFFFFF;
+
+    for (int i = 0; i < 16; i++) {
+        uint32_t temp = right;
+        right = left ^ feistel(right, key + i);
+        left = temp;
+    }
+    return ((uint64_t)right << 32) | left;
+}
+
+uint64_t simple_des_decrypt(uint64_t ciphertext, uint32_t key) {
+    uint32_t left = (ciphertext >> 32) & 0xFFFFFFFF;
+    uint32_t right = ciphertext & 0xFFFFFFFF;
+
+    for (int i = 15; i >= 0; i--) {
+        uint32_t temp = left;
+        left = right ^ feistel(left, key + i);
+        right = temp;
+    }
+
+    return ((uint64_t)left << 32) | right;
+}
+
+int main() {
+    uint64_t plaintext = 0x0123456789ABCDEF;
+    uint32_t key = 0x0F1571C0;  
+
+    printf("Plaintext:  0x%016llX\n", plaintext);
+
+    uint64_t ciphertext = simple_des_encrypt(plaintext, key);
+    printf("Encrypted:  0x%016llX\n", ciphertext);
+
+    uint64_t decrypted = simple_des_decrypt(ciphertext, key);
+    printf("Decrypted:  0x%016llX\n", decrypted);
+
+return 0;
+}
