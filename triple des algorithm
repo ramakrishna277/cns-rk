@@ -15,7 +15,7 @@ int main() {
     uint8_t key2[8] = { 'K','E','Y','2','_','4','5','6' };
     uint8_t key3[8] = { 'K','E','Y','3','_','7','8','9' };
 
-    uint8_t input[16] = "rama krishna"; // 13 bytes including null terminator
+    uint8_t input[16] = "rama krishna"; 
     uint8_t padded_input[16] = {0};
     memcpy(padded_input, input, strlen((char*)input));
 
