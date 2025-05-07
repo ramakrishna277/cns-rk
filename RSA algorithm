@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <string.h>
+
+int gcd(int a, int b) {
+    if (b == 0)
+        return a;
+    return gcd(b, a % b);
+}
+
+int modInverse(int e, int phi) {
+    int t = 0, newt = 1;
+    int r = phi, newr = e;
+    int quotient, temp;
+    while (newr != 0) {
+        quotient = r / newr;
+        temp = newt;
+        newt = t - quotient * newt;
+        t = temp;
+        temp = newr;
+        newr = r - quotient * newr;
+        r = temp;
+    }
+    if (r > 1) return -1;
+    if (t < 0) t += phi;
+    return t;
+}
+
+int power(int base, int exp, int mod) {
+    int result = 1;
+    base = base % mod;
+    while (exp > 0) {
+        if (exp % 2 == 1)
+            result = (result * base) % mod;
+        exp = exp >> 1;
+        base = (base * base) % mod;
+    }
+    return result;
+}
+
+int main() {
+    int p = 17, q = 11;
+    int n = p * q;
+    int phi = (p - 1) * (q - 1);
+
+    int e;
+    for (e = 2; e < phi; e++) {
+        if (gcd(e, phi) == 1)
+            break;
+    }
+
+    int d = modInverse(e, phi);
+    if (d == -1) {
+        printf("Modular inverse not found.\n");
+        return 1;
+    }
+
+    printf("Public Key (e, n): (%d, %d)\n", e, n);
+    printf("Private Key (d, n): (%d, %d)\n", d, n);
+
+    char message[100];
+    printf("Enter message (letters only): ");
+    fgets(message, sizeof(message), stdin);
+    message[strcspn(message, "\n")] = 0;
+
+    int encrypted[100];
+    printf("Encrypted: ");
+    for (int i = 0; i < strlen(message); i++) {
+        encrypted[i] = power((int)message[i], e, n);
+        printf("%d ", encrypted[i]);
+    }
+
+    printf("\nDecrypted: ");
+    for (int i = 0; i < strlen(message); i++) {
+        char decrypted_char = (char)power(encrypted[i], d, n);
+        printf("%c", decrypted_char);
+    }
+
+    printf("\n");
+    return 0;
+}
