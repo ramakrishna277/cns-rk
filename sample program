@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int mod_inverse(int a, int m) {
+   
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1)
+            return x;
+    }
+    return -1;
+}
+
+char decrypt_char(char ch, int a_inv, int b) {
+    if (!isalpha(ch)) return ch;
+    int y = toupper(ch) - 'A';
+    int x = (a_inv * (y - b + 26)) % 26;
+    return 'A' + x;
+}
+
+void decrypt_affine(char* ciphertext, int a, int b) {
+    int a_inv = mod_inverse(a, 26);
+    if (a_inv == -1) {
+        printf("Invalid key: 'a' has no modular inverse.\n");
+        return;
+    }
+
+    printf("Decrypted message:\n");
+    for (int i = 0; ciphertext[i] != '\0'; i++) {
+        printf("%c", decrypt_char(ciphertext[i], a_inv, b));
+    }
+    printf("\n");
+}
+
+int main() {
+    
+    char ciphertext[] = "B U F W Q B L D B Z B W P H W"; 
+
+    int P1 = 4, C1 = 1;    
+    int P2 = 20, C2 = 21;  
+
+
+    int a = -1;
+    for (int i = 1; i < 26; i++) {
+        if ((15 * i) % 26 == 19) {
+            a = i;
+            break;
+        }
+    }
+
+    if (a == -1) {
+        printf("Failed to find a valid 'a'\n");
+        return 1;
+    }
+
+    
+    int b = (C1 - a * P1 + 26 * 10) % 26;
+
+    printf("Guessed keys: a = %d, b = %d\n", a, b);
+
+    decrypt_affine(ciphertext, a, b);
+
+return 0;
+}
