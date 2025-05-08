@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+long long mod_pow(long long base, long long exp, long long mod) {
+    long long result = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp % 2 == 1)
+            result = (result * base) % mod;
+        exp = exp >> 1;
+        base = (base * base) % mod;
+    }
+    return result;
+}
+
+int main() {
+    long long p = 23; 
+    long long g = 5;  
+    long long a = 6;   
+    long long b = 15;  
+
+    long long A = mod_pow(g, a, p); 
+    long long B = mod_pow(g, b, p);  
+
+    long long secretA = mod_pow(B, a, p);  
+    long long secretB = mod_pow(A, b, p);  
+
+    printf("Alice's Public Key (A): %lld\n", A);
+    printf("Bob's Public Key (B): %lld\n", B);
+    printf("Shared Secret (Alice computes): %lld\n", secretA);
+    printf("Shared Secret (Bob computes): %lld\n", secretB);
+
+    char msg[] = "ramakrishna";
+    printf("\nOriginal Message: %s\n", msg);
+
+    printf("Encrypted Message: ");
+    for (int i = 0; msg[i] != '\0'; i++) {
+        msg[i] ^= secretA;  
+        printf("%c", msg[i]);
+    }
+
+    printf("\nDecrypted Message: ");
+    for (int i = 0; msg[i] != '\0'; i++) {
+        msg[i] ^= secretA;  
+        printf("%c", msg[i]);
+    }
+
+    printf("\n");
+
+    return 0;
+}
