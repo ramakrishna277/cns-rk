@@ -1,0 +1,132 @@
+#include <stdio.h>
+#include <stdint.h>
+
+#define ROUNDS 12           
+#define WORD_SIZE 32        
+#define BLOCK_SIZE 64      
+#define KEY_SIZE 128        
+
+typedef uint32_t word_t;
+
+
+static word_t P = 0xB7E15163;  
+static word_t Q = 0x9E3779B9;  
+
+
+typedef struct {
+    word_t S[2 * ROUNDS + 4];  
+} RC5_CTX;
+
+
+void RC5_key_schedule(RC5_CTX *ctx, const uint8_t *key, int key_len) {
+    int i, j;
+    word_t L[key_len / 4];  
+    word_t A, B;
+
+  
+    for (i = 0; i < key_len / 8; i++) {
+        L[i] = (key[2*i] << 8) + key[2*i+1];
+    }
+
+    
+    ctx->S[0] = P;
+    for (i = 1; i < 2 * ROUNDS + 4; i++) {
+        ctx->S[i] = ctx->S[i-1] + Q;
+    }
+
+    
+    A = B = 0;
+    i = j = 0;
+    int max = 3 * (2 * ROUNDS + 4);
+    for (int l = 0; l < max; l++) {
+        A = ctx->S[i] = ((ctx->S[i] + A + B) << 3) + (ctx->S[i] >> 29);
+        B = L[j] = ((L[j] + A + B) << 3) + (L[j] >> 29);
+
+        i = (i + 1) % (2 * ROUNDS + 4);
+        j = (j + 1) % (key_len / 4);
+    }
+}
+
+
+void RC5_encrypt(RC5_CTX *ctx, uint8_t *data) {
+    word_t A, B;
+    A = (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3];
+    B = (data[4] << 24) + (data[5] << 16) + (data[6] << 8) + data[7];
+
+    A += ctx->S[0];
+    B += ctx->S[1];
+
+    for (int i = 1; i <= ROUNDS; i++) {
+        A = ((A ^ B) << B % 32) + ctx->S[2*i];
+        B = ((B ^ A) << A % 32) + ctx->S[2*i + 1];
+    }
+
+    data[0] = (A >> 24) & 0xFF;
+    data[1] = (A >> 16) & 0xFF;
+    data[2] = (A >> 8) & 0xFF;
+    data[3] = A & 0xFF;
+    data[4] = (B >> 24) & 0xFF;
+    data[5] = (B >> 16) & 0xFF;
+    data[6] = (B >> 8) & 0xFF;
+    data[7] = B & 0xFF;
+}
+
+
+void RC5_decrypt(RC5_CTX *ctx, uint8_t *data) {
+    word_t A, B;
+    A = (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3];
+    B = (data[4] << 24) + (data[5] << 16) + (data[6] << 8) + data[7];
+
+    for (int i = ROUNDS; i >= 1; i--) {
+        B = (B - ctx->S[2*i + 1]) >> A % 32;
+        A = (A - ctx->S[2*i]) >> B % 32;
+    }
+
+    B -= ctx->S[1];
+    A -= ctx->S[0];
+
+    data[0] = (A >> 24) & 0xFF;
+    data[1] = (A >> 16) & 0xFF;
+    data[2] = (A >> 8) & 0xFF;
+    data[3] = A & 0xFF;
+    data[4] = (B >> 24) & 0xFF;
+    data[5] = (B >> 16) & 0xFF;
+    data[6] = (B >> 8) & 0xFF;
+    data[7] = B & 0xFF;
+}
+
+int main() {
+    RC5_CTX ctx;
+    uint8_t key[16] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 
+                        0xab, 0xf7, 0x97, 0x75, 0x46, 0x66, 0x49, 0x52 };  
+    uint8_t data[8] = { 0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d };  
+
+    
+    RC5_key_schedule(&ctx, key, KEY_SIZE);
+
+    printf("Original Data: ");
+    for (int i = 0; i < 8; i++) {
+        printf("%02x ", data[i]);
+    }
+    printf("\n");
+
+   
+    RC5_encrypt(&ctx, data);
+
+    printf("Encrypted Data: ");
+    for (int i = 0; i < 8; i++) {
+        printf("%02x ", data[i]);
+    }
+    printf("\n");
+
+   
+    RC5_decrypt(&ctx, data);
+
+    printf("Decrypted Data: ");
+    for (int i = 0; i < 8; i++) {
+        printf("%02x ", data[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
