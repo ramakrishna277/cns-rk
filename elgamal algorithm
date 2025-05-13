@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+
+typedef long long int ll;
+
+
+ll power_mod(ll a, ll b, ll p) {
+    ll result = 1;
+    a = a % p;
+    while (b > 0) {
+        if (b % 2 == 1) {
+            result = (result * a) % p;
+        }
+        a = (a * a) % p;
+        b = b / 2;
+    }
+    return result;
+}
+
+
+ll mod_inverse(ll a, ll p) {
+    return power_mod(a, p - 2, p); 
+}
+
+
+void generate_keys(ll *p, ll *g, ll *x, ll *y) {
+    
+    *p = 7919;  
+    
+    
+    *g = 2;  
+    
+   
+    srand(time(0));
+    *x = rand() % (*p - 2) + 1;  
+    
+   
+    *y = power_mod(*g, *x, *p);
+}
+
+
+void elgamal_encrypt(ll p, ll g, ll y, ll m, ll *c1, ll *c2) {
+    
+    ll k = rand() % (p - 2) + 1;  
+    
+    
+    *c1 = power_mod(g, k, p);
+    
+   
+    *c2 = (m * power_mod(y, k, p)) % p;
+}
+
+
+ll elgamal_decrypt(ll p, ll x, ll c1, ll c2) {
+    // Compute m = c2 * (c1^x)^(-1) % p
+    ll c1_x = power_mod(c1, x, p);
+    ll c1_x_inv = mod_inverse(c1_x, p);
+    return (c2 * c1_x_inv) % p;
+}
+
+int main() {
+    ll p, g, x, y;  
+    ll m = 1234;     
+    ll c1, c2;       
+
+    
+    generate_keys(&p, &g, &x, &y);
+
+    printf("Public parameters:\n");
+    printf("p = %lld, g = %lld, y = %lld\n", p, g, y);
+    printf("Private key: x = %lld\n", x);
+
+    printf("\nOriginal Message: %lld\n", m);
+
+    
+    elgamal_encrypt(p, g, y, m, &c1, &c2);
+    printf("\nCiphertext:\nc1 = %lld, c2 = %lld\n", c1, c2);
+
+    
+    ll decrypted_message = elgamal_decrypt(p, x, c1, c2);
+    printf("\nDecrypted Message: %lld\n", decrypted_message);
+
+    return 0;
+}
